@@ -2,7 +2,7 @@ const express = require('express');
 const fetch = require('node-fetch');
 const redis = require('redis');
 
-const PORT = process.env.PORT || 5001;
+const PORT = process.env.PORT || 5000;
 const REDIS_PORT = process.env.REDIS_PORT || 6379;
 
 const client = redis.createClient(REDIS_PORT);
@@ -17,7 +17,7 @@ function setResponse(username, repos) {
 // Make request to Github for data
 async function getRepos(req, res, next) {
   try {
-    console.time(`Timing`);
+    
     console.log('Fetching...');
 
     const { username } = req.params;
@@ -31,7 +31,7 @@ async function getRepos(req, res, next) {
     // Set data to Redis
     client.setex(username, 3600, repos);
     
-    console.timeEnd(`Timing`);
+    
     res.send(setResponse(username, repos));
 
   } catch (err) {
@@ -47,7 +47,7 @@ function cache(req, res, next) {
   client.get(username, (err, data) => {
     if (err) throw err;
 
-    if (data !== null) {
+    if (data != null) {
       res.send(setResponse(username, data));
     } else {
       next();
@@ -55,12 +55,9 @@ function cache(req, res, next) {
   });
 }
 
-
-app.get('/repos/:username', cache, getRepos);
-//app.get('/repos/:username', cache, getRepos);
-
+//app.get('/repos/:username', getRepos);
+app.get('/repos/:username',cache, getRepos);
 
 app.listen(5000, () => {
-
   console.log(`App escuchando en puerto ${PORT}`);
 });
